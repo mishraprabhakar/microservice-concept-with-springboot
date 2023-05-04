@@ -2,11 +2,16 @@ package com.microservice.concepts.customer;
 
 import com.microservice.concepts.clients.fraud.FraudCheckResponse;
 import com.microservice.concepts.clients.fraud.FraudClient;
+import com.microservice.concepts.clients.notification.NotificationClient;
+import com.microservice.concepts.clients.notification.NotificationRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public record CustomerService(CustomerRepository repository, RestTemplate template, FraudClient client) {
+public record CustomerService(CustomerRepository repository,
+                              RestTemplate template,
+                              FraudClient client,
+                              NotificationClient notificationClient) {
 
 
     public void register(CustomerRegistrationRequest request) {
@@ -34,7 +39,14 @@ public record CustomerService(CustomerRepository repository, RestTemplate templa
             throw new IllegalStateException("Fraudster");
         }
 
+        //todo : make it async. i.e add to queue
+        notificationClient.sendNotification(
+                new NotificationRequest(
+                        String.format("Hi %s, welcome to Microservice Concept Tutorial..."
+                                .formatted(customer.getFirstName())),
+                        customer.getEmail(),
+                        customer.getId())
+                );
 
-        //todo : send notification
     }
 }
